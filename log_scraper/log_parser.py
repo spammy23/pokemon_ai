@@ -1,6 +1,7 @@
 import re
 import json
 from path import path
+
 directory = path('.')
 USER_PLAYER = r"\|player\|(?P<player>.+?)\|(?P<username>.+?)\|.*?"
 POKE = r"\|poke\|p(?P<player>.+?)\|(?P<poke>.+)"
@@ -11,6 +12,7 @@ MOVE_CORRECTIONS = {"ExtremeSpeed": "Extreme Speed",
                     "ThunderPunch": "Thunder Punch",
                     "SolarBeam": "Solar Beam",
                     "DynamicPunch": "Dynamic Punch"}
+
 
 def handle_line(username, line):
     line = line.strip()
@@ -75,6 +77,7 @@ def handle_line(username, line):
             if match.group("move") not in opp_team[opp_nicknames[poke]]:
                 opp_team[opp_nicknames[poke]].append(match.group("move"))
 
+
 def make_graph_move(opp_team, graph_move, graph_move_frequencies):
     for poke in opp_team:
         for move in opp_team[poke]:
@@ -122,8 +125,10 @@ def make_graph_poke(opp_team, graph_poke, graph_frequencies):
                     graph_poke[poke][move][othermove] = 1
     return graph_poke, graph_frequencies
 
+
 class Zoroark(Exception):
     pass
+
 
 if __name__ == "__main__":
     graph_poke = {}
@@ -140,7 +145,7 @@ if __name__ == "__main__":
                 continue
             if "uu-" not in log and "ou-" not in log:
                 continue
-            print log
+            print(log)
             player = ""
             opp_team = {}
             opp_nicknames = {}
@@ -163,4 +168,4 @@ if __name__ == "__main__":
         'cooccurences': graph_poke,
     }
     with open("graph_move.json", "w") as f:
-        f.write(json.dumps(poke_graph, sort_keys=True,indent=4, separators=(',', ': ')))
+        f.write(json.dumps(poke_graph, sort_keys=True, indent=4, separators=(',', ': ')))

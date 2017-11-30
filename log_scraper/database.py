@@ -1,5 +1,8 @@
-import sqlite3
+import os
+import pickle
 from argparse import ArgumentParser
+from warnings import warn
+
 
 def parse_args():
     argparser = ArgumentParser()
@@ -7,39 +10,41 @@ def parse_args():
 
     return argparser.parse_args()
 
-class ReplayDatabase(object):
 
-    def __init__(self, db_path):
-        self.db_path = db_path
-        self.conn = sqlite3.connect(self.db_path)
-
-        try:
-            c = self.conn.cursor()
-            c.execute("CREATE TABLE replay (_id INTEGER PRIMARY KEY AUTOINCREMENT, replay_id TEXT NOT NULL UNIQUE, battle_log TEXT)")
-        except:
-            pass
+class ReplayDatabase:
+    def __init__(self, file_name):
+        self.file_name = file_name
+        self.db = {}
+        if os.path.exists(file_name):
+            file = open(file_name, "rb")
+            self.db = pickle.load(file)
+            file.close()
+        else:
+            with open(file_name, "wb") as file:
+                pickle.dump(self.db, file)
 
     def check_replay_exists(self, replay_id):
-        c = self.conn.cursor()
-        replay = c.execute("SELECT EXISTS(SELECT 1 FROM replay WHERE replay_id=? LIMIT 1)", [replay_id]).fetchone()
-        return bool(replay[0])
+        return replay_id in self.db.keys()
 
     def get_replay(self, replay_id):
-        c = self.conn.cursor()
-        replay = c.execute("SELECT battle_log FROM replay WHERE replay_id=?", [replay_id]).fetchone()
-        return replay[0]
+        return self.db[replay_id]
 
     def add_replay(self, replay_id, battle_log):
-        c = self.conn.cursor()
-        c.execute("INSERT INTO replay (replay_id, battle_log) VALUES (?, ?)", [replay_id, battle_log])
+        self.db[replay_id] = battle_log
 
     def commit(self):
-        self.conn.commit()
+        with open(self.file_name, "wb") as file:
+            pickle.dump(self.db, file)
 
     def close(self):
-        self.conn.close()
+        warn("Deprecated method")
+
 
 if __name__ == "__main__":
-
-    args = parse_args()
-    r = ReplayDatabase(args.db_path)
+    database = ReplayDatabase(input("File name: "))
+    db = database.db
+    for x in db:
+        print(f"=== START {x} ===")
+        print(db[x])
+    # args = parse_args()
+    # r = ReplayDatabase(args.db_path)
